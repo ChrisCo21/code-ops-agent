@@ -65,4 +65,33 @@ print(len(products), products[:3])
 # TODO 3: make 5,000 code rows. For each: pick a SKU (unevenly), make a unique
 #         code string, pick a status with random.choices(..., weights=[...]),
 #         and fill redeemed_at / revoked_reason only when they apply.
+ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ23456789"
+def make_code():
+    group1 = "".join(random.choices(ALPHABET, k=4))
+    group2 = "".join(random.choices(ALPHABET, k=4))
+    group3 = "".join(random.choices(ALPHABET, k=4))
+
+    return f"{group1}-{group2}-{group3}"
+print(make_code(), make_code(), make_code())
+
+SKUS = [p[0] for p in products]          # SKU strings, pulled out of products
+SKU_WEIGHTS = [random.random() for _ in SKUS]    # one random weight per SKU (makes it uneven)
+RETAILERS = ["GameChamps", "CrazyGamer", "FlyingGames"]      # a few invented store names
+REVOKED_REASONS = ["Delisted", "Fraud", "Refund"]
+
+def make_row():
+    sku = random.choices(SKUS, weights=SKU_WEIGHTS)[0]           # pick one SKU using SKU_WEIGHTS
+    status = random.choices(["available", "redeemed", "revoked"], weights=[35, 60, 5])[0]       # pick available / redeemed / revoked using weights
+    retailer = random.choice(RETAILERS)
+    created_at = fake.date_between(start_date="-1y", end_date="-30d")   # a date in the past year
+    redeemed_at = None
+    revoked_reason = None
+    if status == "redeemed":
+        redeemed_at = (created_at + timedelta(days=random.randint(1, 30))).isoformat()      # a date after created_at
+    elif status == "revoked":
+        revoked_reason = random.choice(REVOKED_REASONS)   # pick from a short list of reasons
+    return (make_code(), sku, status, retailer, created_at.isoformat(), redeemed_at, revoked_reason)
+for _ in range(10):
+    print(make_row())
+            
 # TODO 4: insert both lists with cur.executemany(...), then conn.commit().
